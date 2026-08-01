@@ -1,0 +1,20 @@
+name: FlowHarness Vibe Check
+"on":
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  vibe-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: flowharness-ai/vibe-check-action@v1
+        with:
+          executor: replay
+          upload: ${{ secrets.FLOWHARNESS_TOKEN != '' }}
+        env:
+          FLOWHARNESS_TOKEN: ${{ secrets.FLOWHARNESS_TOKEN }}
+          FLOWHARNESS_API_URL: ${{ vars.FLOWHARNESS_API_URL }}
