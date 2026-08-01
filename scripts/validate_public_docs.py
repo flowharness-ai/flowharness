@@ -32,21 +32,23 @@ REQUIRED_FILES = (
     "scripts/test_validate_public_docs.py",
 )
 
-PUBLIC_CONTENT_FILES = tuple(
-    relative_path
-    for relative_path in REQUIRED_FILES
-    if not relative_path.startswith("scripts/")
-)
-MARKDOWN_FILES = tuple(
-    relative_path for relative_path in REQUIRED_FILES if relative_path.endswith(".md")
-)
-
 CATEGORY = "The agent governance and evaluation control plane for organizations."
 OPEN_CORE = (
     "FlowHarness is open-core. Its local tools and GitHub Actions are free and "
     "Apache-2.0. The organization-wide governance and evaluation control plane is a "
     "commercial product available as managed SaaS, on-premises, and air-gapped "
     "enterprise deployments."
+)
+VERSION_MATRIX_HEADER = (
+    "Surface",
+    "Released version",
+    "Embedded Python artifact",
+)
+VERSION_MATRIX_SEPARATOR = ("---", "---", "---")
+VERSION_MATRIX_ROWS = (
+    ("Local CLI", "0.1.2", "flowharness 0.1.2"),
+    ("Scan Action", "v1.0.1", "flowharness 0.1.2"),
+    ("Vibe Check Action", "v1.0.1", "flowharness-ci-runner 0.1.1"),
 )
 
 WORKFLOW_CONTRACTS = {
@@ -129,16 +131,40 @@ STALE_B7_COPY = re.compile(
     r"\bB7\s+(?:has\s+not|hasn't|hasn’t|did\s+not)\s+prov(?:e|ed)\s+sticky comments?\b",
     re.IGNORECASE,
 )
-SOURCE_MIRROR_CLAIM = re.compile(
-    r"\b(?:hub|repository|repo)\s+is\s+(?!not\b|never\b)(?:a\s+)?"
-    r"(?:complete\s+)?(?:VCS\s+)?source mirror\b",
+SOURCE_MIRROR_MENTION = re.compile(r"\bsource mirror\b", re.IGNORECASE)
+NEGATED_SOURCE_MIRROR_PREFIX = re.compile(
+    r"\bnot\s+(?:(?:a|the)\s+)?(?:complete\s+)?(?:VCS\s+)?$",
     re.IGNORECASE,
 )
+INTERNAL_ROOTS = frozenset({".git", ".ruff_cache"})
+INTERNAL_FILES = frozenset({".claude/napkin.md"})
 
 
-def _load_required_text(root: Path, errors: list[str]) -> dict[str, str]:
+def _discover_repository_files(root: Path) -> tuple[str, ...]:
+    files: list[str] = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        relative_path = path.relative_to(root)
+        relative_path_string = relative_path.as_posix()
+        if (
+            relative_path.parts[0] in INTERNAL_ROOTS
+            or relative_path_string in INTERNAL_FILES
+            or "__pycache__" in relative_path.parts
+            or path.suffix == ".pyc"
+        ):
+            continue
+        files.append(relative_path_string)
+    return tuple(sorted(files))
+
+
+def _load_public_text(
+    root: Path, repository_files: tuple[str, ...], errors: list[str]
+) -> dict[str, str]:
     texts: dict[str, str] = {}
-    for relative_path in PUBLIC_CONTENT_FILES:
+    for relative_path in repository_files:
+        if relative_path.startswith("scripts/"):
+            continue
         try:
             texts[relative_path] = (root / relative_path).read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
@@ -260,13 +286,27 @@ def _validate_workflow(root: Path, relative_path: str, errors: list[str]) -> Non
             )
 
 
+def _validate_sensitive_query(relative_path: str, url: str, errors: list[str]) -> None:
+    normalized_url = html.unescape(url).rstrip(".,;:")
+    for query_key, _ in parse_qsl(
+        urlsplit(normalized_url).query, keep_blank_values=True
+    ):
+        normalized_key = query_key.lower()
+        if normalized_key in SENSITIVE_QUERY_KEYS:
+            errors.append(
+                f"{relative_path} URL contains sensitive query parameter: {normalized_key}"
+            )
+
+
 def _validate_markdown_links(
     root: Path, texts: Mapping[str, str], errors: list[str]
 ) -> None:
     resolved_root = root.resolve()
-    for relative_path in MARKDOWN_FILES:
+    for relative_path, text in texts.items():
+        if not relative_path.endswith(".md"):
+            continue
         source = root / relative_path
-        for match in MARKDOWN_LINK.finditer(texts.get(relative_path, "")):
+        for match in MARKDOWN_LINK.finditer(text):
             destination = match.group(1).strip("<>")
             if destination.startswith("#"):
                 continue
@@ -294,6 +334,65 @@ def _validate_markdown_links(
                 )
 
 
+def _markdown_cells(line: str) -> tuple[str, ...]:
+    stripped = line.strip()
+    if not stripped.startswith("|") or not stripped.endswith("|"):
+        return ()
+    return tuple(cell.strip() for cell in stripped.strip("|").split("|"))
+
+
+def _validate_version_matrix(readme: str, errors: list[str]) -> None:
+    lines = readme.splitlines()
+    headings = [
+        index for index, line in enumerate(lines) if line.strip() == "## Version matrix"
+    ]
+    if len(headings) != 1:
+        errors.append("README.md must contain exactly one version matrix")
+        return
+
+    cursor = headings[0] + 1
+    while cursor < len(lines) and not lines[cursor].strip():
+        cursor += 1
+
+    header = _markdown_cells(lines[cursor]) if cursor < len(lines) else ()
+    if header != VERSION_MATRIX_HEADER:
+        errors.append(
+            f"README.md version matrix header must be exactly {VERSION_MATRIX_HEADER}"
+        )
+    cursor += 1
+
+    separator = _markdown_cells(lines[cursor]) if cursor < len(lines) else ()
+    if separator != VERSION_MATRIX_SEPARATOR:
+        errors.append(
+            "README.md version matrix must use the exact three-column separator"
+        )
+    cursor += 1
+
+    rows: list[tuple[str, ...]] = []
+    while cursor < len(lines):
+        row = _markdown_cells(lines[cursor])
+        if not row:
+            break
+        rows.append(row)
+        cursor += 1
+
+    parsed_rows = tuple(rows)
+    if parsed_rows != VERSION_MATRIX_ROWS:
+        errors.append(
+            "README.md version matrix rows must be exactly the three supported surfaces"
+        )
+    if VERSION_MATRIX_ROWS[0] not in parsed_rows:
+        errors.append("README.md version matrix must identify local CLI 0.1.2")
+    if VERSION_MATRIX_ROWS[1] not in parsed_rows:
+        errors.append(
+            "README.md version matrix must identify Scan Action v1.0.1 with embedded 0.1.2"
+        )
+    if VERSION_MATRIX_ROWS[2] not in parsed_rows:
+        errors.append(
+            "README.md version matrix must identify Vibe Action v1.0.1 with embedded runner 0.1.1"
+        )
+
+
 def _validate_product_contract(texts: Mapping[str, str], errors: list[str]) -> None:
     readme = texts.get("README.md", "")
     normalized_readme = re.sub(r"\s+", " ", readme).strip()
@@ -308,34 +407,7 @@ def _validate_product_contract(texts: Mapping[str, str], errors: list[str]) -> N
             errors.append(f"README.md missing released tool: {tool_name}")
     if "docs/organizational-platform.md" not in readme:
         errors.append("README.md missing organizational-platform bridge")
-
-    lines = readme.splitlines()
-    if not any(
-        re.search(r"\|\s*local CLI\s*\|\s*0\.1\.2\s*\|", line, re.IGNORECASE)
-        for line in lines
-    ):
-        errors.append("README.md version matrix must identify local CLI 0.1.2")
-    if not any(
-        re.search(r"\|\s*Scan Action\s*\|\s*v1\.0\.1\s*\|", line, re.IGNORECASE)
-        and "0.1.2" in line
-        for line in lines
-    ):
-        errors.append(
-            "README.md version matrix must identify Scan Action v1.0.1 with embedded 0.1.2"
-        )
-    if not any(
-        re.search(
-            r"\|\s*Vibe(?: Check)? Action\s*\|\s*v1\.0\.1\s*\|",
-            line,
-            re.IGNORECASE,
-        )
-        and "0.1.1" in line
-        and re.search(r"runner|flowharness-ci-runner", line, re.IGNORECASE)
-        for line in lines
-    ):
-        errors.append(
-            "README.md version matrix must identify Vibe Action v1.0.1 with embedded runner 0.1.1"
-        )
+    _validate_version_matrix(readme, errors)
 
 
 def _validate_provenance(texts: Mapping[str, str], errors: list[str]) -> None:
@@ -364,6 +436,14 @@ def _validate_provenance(texts: Mapping[str, str], errors: list[str]) -> None:
             errors.append(f"{relative_path} missing SHA-256 for {package}")
 
 
+def _has_affirmative_source_mirror_claim(text: str) -> bool:
+    for mention in SOURCE_MIRROR_MENTION.finditer(text):
+        prefix = text[max(0, mention.start() - 80) : mention.start()]
+        if not NEGATED_SOURCE_MIRROR_PREFIX.search(prefix):
+            return True
+    return False
+
+
 def _validate_banned_content(texts: Mapping[str, str], errors: list[str]) -> None:
     for relative_path, text in texts.items():
         lowered = text.lower()
@@ -389,40 +469,45 @@ def _validate_banned_content(texts: Mapping[str, str], errors: list[str]) -> Non
             errors.append(f"{relative_path} contains stale B7-unproven copy")
         if PLACEHOLDER_MARKER.search(text):
             errors.append(f"{relative_path} contains placeholder marker")
-        if SOURCE_MIRROR_CLAIM.search(text):
+        if _has_affirmative_source_mirror_claim(text):
             errors.append(
                 f"{relative_path} must not call the public hub a source mirror"
             )
 
+        for markdown_link in MARKDOWN_LINK.finditer(text):
+            destination = markdown_link.group(1).strip("<>")
+            _validate_sensitive_query(relative_path, destination, errors)
         for url_match in ABSOLUTE_URL.finditer(text):
-            url = html.unescape(url_match.group(0)).rstrip(".,;:")
-            for query_key, _ in parse_qsl(urlsplit(url).query, keep_blank_values=True):
-                normalized_key = query_key.lower()
-                if normalized_key in SENSITIVE_QUERY_KEYS:
-                    errors.append(
-                        f"{relative_path} URL contains sensitive query parameter: {normalized_key}"
-                    )
+            _validate_sensitive_query(relative_path, url_match.group(0), errors)
 
 
 def validate_repository(root: Path = REPOSITORY_ROOT) -> list[str]:
     """Return every contract violation found under *root*."""
 
+    repository_files = _discover_repository_files(root)
+    repository_file_set = set(repository_files)
+    required_file_set = set(REQUIRED_FILES)
     missing = [
         relative_path
         for relative_path in REQUIRED_FILES
-        if not (root / relative_path).is_file()
+        if relative_path not in repository_file_set
     ]
-    if missing:
-        return [f"missing required file: {relative_path}" for relative_path in missing]
+    unexpected = sorted(repository_file_set - required_file_set)
 
-    errors: list[str] = []
-    texts = _load_required_text(root, errors)
+    errors = [f"missing required file: {relative_path}" for relative_path in missing]
+    errors.extend(
+        f"unexpected public file: {relative_path}" for relative_path in unexpected
+    )
+    texts = _load_public_text(root, repository_files, errors)
+    _validate_banned_content(texts, errors)
+    if missing:
+        return list(dict.fromkeys(errors))
+
     for relative_path in WORKFLOW_CONTRACTS:
         _validate_workflow(root, relative_path, errors)
     _validate_markdown_links(root, texts, errors)
     _validate_product_contract(texts, errors)
     _validate_provenance(texts, errors)
-    _validate_banned_content(texts, errors)
     return list(dict.fromkeys(errors))
 
 

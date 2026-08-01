@@ -203,6 +203,48 @@ class PublicDocsValidatorTests(unittest.TestCase):
         result = self.run_validator()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_rejects_unexpected_public_file(self) -> None:
+        _write(self.root / "docs" / "unexpected.md", "# Unexpected public page\n")
+        self.assert_rejected("unexpected public file: docs/unexpected.md")
+
+    def test_scans_unexpected_public_file_for_private_content(self) -> None:
+        _write(
+            self.root / "docs" / "unexpected.md",
+            "https://github.com/suleimanmahmoud/flowharness\n",
+        )
+        self.assert_rejected("docs/unexpected.md contains private monorepo URL")
+
+    def test_scans_unexpected_public_file_for_banned_content(self) -> None:
+        _write(self.root / "docs" / "unexpected.md", "SOC 2 Ready\n")
+        self.assert_rejected(
+            "docs/unexpected.md contains banned product claim: SOC 2 Ready"
+        )
+
+    def test_scans_unexpected_public_file_for_sensitive_url(self) -> None:
+        _write(
+            self.root / "docs" / "unexpected.md",
+            "https://flowharness.ai/go/scan?secret=value\n",
+        )
+        self.assert_rejected(
+            "docs/unexpected.md URL contains sensitive query parameter: secret"
+        )
+
+    def test_scans_unexpected_public_file_for_relative_sensitive_url(self) -> None:
+        _write(self.root / "docs" / "unexpected.md", "[Leak](?secret=value)\n")
+        self.assert_rejected(
+            "docs/unexpected.md URL contains sensitive query parameter: secret"
+        )
+
+    def test_rejects_unexpected_file_beside_internal_napkin(self) -> None:
+        _write(self.root / ".claude" / "public.md", "SOC 2 Ready\n")
+        result = self.run_validator()
+        output = result.stdout + result.stderr
+        self.assertNotEqual(result.returncode, 0, output)
+        self.assertIn("unexpected public file: .claude/public.md", output)
+        self.assertIn(
+            ".claude/public.md contains banned product claim: SOC 2 Ready", output
+        )
+
     def test_rejects_missing_trigger(self) -> None:
         self.replace_once("examples/scan.yml", "  pull_request:\n", "  push:\n")
         self.assert_rejected("examples/scan.yml must use pull_request")
@@ -312,6 +354,20 @@ class PublicDocsValidatorTests(unittest.TestCase):
         )
         self.assert_rejected("must not call the public hub a source mirror")
 
+    def test_rejects_semantic_source_mirror_claim(self) -> None:
+        self.append(
+            "README.md",
+            "\nThis documentation hub serves as the complete source mirror.\n",
+        )
+        self.assert_rejected("must not call the public hub a source mirror")
+
+    def test_rejects_another_affirmative_source_mirror_wording(self) -> None:
+        self.append(
+            "README.md",
+            "\nThis documentation hub functions as a complete source mirror.\n",
+        )
+        self.assert_rejected("must not call the public hub a source mirror")
+
     def test_rejects_broken_relative_link(self) -> None:
         self.append("README.md", "\n[Missing guide](docs/does-not-exist.md)\n")
         self.assert_rejected("broken relative Markdown link")
@@ -362,6 +418,21 @@ class PublicDocsValidatorTests(unittest.TestCase):
         )
         self.assert_rejected("sensitive query parameter: secret")
 
+    def test_rejects_sensitive_query_only_markdown_url(self) -> None:
+        self.append("README.md", "\n[Leak](?secret=value)\n")
+        self.assert_rejected("sensitive query parameter: secret")
+
+    def test_rejects_sensitive_relative_markdown_url(self) -> None:
+        self.append(
+            "README.md",
+            "\n[Leak](docs/getting-started.md?repository=private/repo)\n",
+        )
+        self.assert_rejected("sensitive query parameter: repository")
+
+    def test_rejects_sensitive_protocol_relative_markdown_url(self) -> None:
+        self.append("README.md", "\n[Leak](//flowharness.ai/go/scan?finding=secret)\n")
+        self.assert_rejected("sensitive query parameter: finding")
+
     def test_rejects_missing_category(self) -> None:
         self.replace_once("README.md", CATEGORY, "A governance tool for organizations.")
         self.assert_rejected("missing exact product category")
@@ -389,6 +460,49 @@ class PublicDocsValidatorTests(unittest.TestCase):
     def test_rejects_wrong_local_cli_version_matrix_entry(self) -> None:
         self.replace_once("README.md", "| Local CLI | 0.1.2 |", "| Local CLI | 0.1.1 |")
         self.assert_rejected("version matrix must identify local CLI 0.1.2")
+
+    def test_rejects_wrong_version_matrix_header(self) -> None:
+        self.replace_once(
+            "README.md",
+            "| Surface | Released version | Embedded Python artifact |",
+            "| Surface | Version | Embedded Python artifact |",
+        )
+        self.assert_rejected("version matrix header must be exactly")
+
+    def test_rejects_duplicate_version_matrix(self) -> None:
+        matrix = """## Version matrix
+
+| Surface | Released version | Embedded Python artifact |
+| --- | --- | --- |
+| Local CLI | 0.1.2 | flowharness 0.1.2 |
+| Scan Action | v1.0.1 | flowharness 0.1.2 |
+| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |
+"""
+        self.append("README.md", f"\n{matrix}")
+        self.assert_rejected("README.md must contain exactly one version matrix")
+
+    def test_rejects_additional_version_matrix_row(self) -> None:
+        self.replace_once(
+            "README.md",
+            "| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |\n",
+            "| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |\n"
+            "| Future Action | v2.0.0 | future-runner 2.0.0 |\n",
+        )
+        self.assert_rejected("version matrix rows must be exactly")
+
+    def test_rejects_incomplete_version_matrix_cell(self) -> None:
+        self.replace_once(
+            "README.md",
+            "| Scan Action | v1.0.1 | flowharness 0.1.2 |",
+            "| Scan Action | v1.0.1 | |",
+        )
+        self.assert_rejected("version matrix rows must be exactly")
+
+    def test_rejects_missing_version_matrix_row(self) -> None:
+        self.replace_once(
+            "README.md", "| Local CLI | 0.1.2 | flowharness 0.1.2 |\n", ""
+        )
+        self.assert_rejected("version matrix rows must be exactly")
 
     def test_rejects_wrong_scan_action_matrix_entry(self) -> None:
         self.replace_once(
