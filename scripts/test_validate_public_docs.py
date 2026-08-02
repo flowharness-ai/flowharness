@@ -270,6 +270,14 @@ class PublicDocsValidatorTests(unittest.TestCase):
             ".claude/public.md contains banned product claim: SOC 2 Ready", output
         )
 
+    def test_allows_internal_sdd_files(self) -> None:
+        _write(
+            self.root / ".superpowers" / "sdd" / "task-brief.md",
+            "# Internal task metadata\n",
+        )
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_rejects_missing_trigger(self) -> None:
         self.replace_once("examples/scan.yml", "  pull_request:\n", "  push:\n")
         self.assert_rejected("examples/scan.yml must use pull_request")
