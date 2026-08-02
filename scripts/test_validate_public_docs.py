@@ -60,10 +60,22 @@ SCAN_TOOL_SELECTION_CONTRACT = """Who: repository maintainers and reviewers.
 When: before merging a pull request that changes agent-context files.
 Why: detect deterministic static drift and risk before the change ships."""
 SCAN_WALKTHROUGH_HEADING = "## Walkthrough: remediate a risky agent instruction"
+SCAN_WALKTHROUGH_MARKERS = (
+    "https://example.invalid/flowharness-scan-fixture",
+    "injection_heuristics_check",
+    "override, exfil, remote_exec",
+    "QUARANTINE",
+)
 VIBE_TOOL_SELECTION_CONTRACT = """Who: teams that own an agent's expected behavior.
 When: after changing prompts, rules, skills, tools, or other agent context.
 Why: replay committed cases to prove the intended behavior still holds."""
 VIBE_WALKTHROUGH_HEADING = "## Walkthrough: correct a committed cassette failure"
+VIBE_WALKTHROUGH_MARKERS = (
+    "support-agent billing-dispute",
+    "human escalation",
+    "recorded candidate output",
+    "offline replay",
+)
 VIBE_OFFLINE_BOUNDARY = (
     "The released Vibe Check replay evaluation is offline and uses no live model."
 )
@@ -146,14 +158,19 @@ repositories contain Action source; released Python source is in the Apache-2.0 
             "# FlowHarness Scan\n\n"
             "## Choose Scan for static repository hygiene\n\n"
             f"{SCAN_TOOL_SELECTION_CONTRACT}\n\n"
-            f"{SCAN_WALKTHROUGH_HEADING}\n"
+            f"{SCAN_WALKTHROUGH_HEADING}\n\n"
+            "Synthetic fixture: https://example.invalid/flowharness-scan-fixture. "
+            "The injection_heuristics_check reports override, exfil, remote_exec, "
+            "and QUARANTINE.\n"
         ),
         "vibe-check.md": (
             "# FlowHarness Vibe Check\n\n"
             "## Choose Vibe Check for replay behavior\n\n"
             f"{VIBE_TOOL_SELECTION_CONTRACT}\n\n"
             f"{VIBE_OFFLINE_BOUNDARY}\n\n"
-            f"{VIBE_WALKTHROUGH_HEADING}\n"
+            f"{VIBE_WALKTHROUGH_HEADING}\n\n"
+            "The committed support-agent billing-dispute case requires human escalation. "
+            "Its recorded candidate output omits that escalation, so offline replay fails.\n"
         ),
         "findings-and-verdicts.md": "# Findings and verdicts\n",
         "adoption-and-baselines.md": "# Adoption and baselines\n",
@@ -224,6 +241,18 @@ class PublicDocsValidatorTests(unittest.TestCase):
         path = self.root / relative_path
         path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
 
+    def remove_section_body(self, relative_path: str, heading: str) -> None:
+        path = self.root / relative_path
+        content = path.read_text(encoding="utf-8")
+        section_start = content.index(heading)
+        body_start = content.index("\n", section_start) + 1
+        next_heading = content.find("\n## ", body_start)
+        if next_heading == -1:
+            next_heading = len(content)
+        path.write_text(
+            content[:body_start] + "\n" + content[next_heading:], encoding="utf-8"
+        )
+
     def test_accepts_complete_public_hub(self) -> None:
         result = self.run_validator()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -272,8 +301,28 @@ class PublicDocsValidatorTests(unittest.TestCase):
 
     def test_allows_internal_sdd_files(self) -> None:
         _write(
-            self.root / ".superpowers" / "sdd" / "task-brief.md",
+            self.root
+            / ".superpowers"
+            / "sdd"
+            / "2026-08-02-concrete-public-onboarding"
+            / "task-1-brief.md",
             "# Internal task metadata\n",
+        )
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_rejects_unexpected_non_sdd_superpowers_file(self) -> None:
+        _write(self.root / ".superpowers" / "unexpected.md", "# Unexpected\n")
+        self.assert_rejected("unexpected public file: .superpowers/unexpected.md")
+
+    def test_allows_internal_sdd_review_diff(self) -> None:
+        _write(
+            self.root
+            / ".superpowers"
+            / "sdd"
+            / "2026-08-02-concrete-public-onboarding"
+            / "review-deadbeef..feedface.diff",
+            "SOC 2 Ready\n",
         )
         result = self.run_validator()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -498,6 +547,10 @@ class PublicDocsValidatorTests(unittest.TestCase):
         self.replace_once("docs/scan.md", SCAN_WALKTHROUGH_HEADING, "")
         self.assert_rejected("docs/scan.md missing Scan walkthrough")
 
+    def test_rejects_missing_scan_walkthrough_body(self) -> None:
+        self.remove_section_body("docs/scan.md", SCAN_WALKTHROUGH_HEADING)
+        self.assert_rejected("docs/scan.md missing required Scan walkthrough content")
+
     def test_rejects_missing_vibe_tool_selection_contract(self) -> None:
         self.replace_once("docs/vibe-check.md", VIBE_TOOL_SELECTION_CONTRACT, "")
         self.assert_rejected(
@@ -507,6 +560,12 @@ class PublicDocsValidatorTests(unittest.TestCase):
     def test_rejects_missing_vibe_walkthrough(self) -> None:
         self.replace_once("docs/vibe-check.md", VIBE_WALKTHROUGH_HEADING, "")
         self.assert_rejected("docs/vibe-check.md missing Vibe Check walkthrough")
+
+    def test_rejects_missing_vibe_walkthrough_body(self) -> None:
+        self.remove_section_body("docs/vibe-check.md", VIBE_WALKTHROUGH_HEADING)
+        self.assert_rejected(
+            "docs/vibe-check.md missing required Vibe Check walkthrough content"
+        )
 
     def test_rejects_missing_vibe_offline_no_live_model_boundary(self) -> None:
         self.replace_once("docs/vibe-check.md", VIBE_OFFLINE_BOUNDARY, "")
