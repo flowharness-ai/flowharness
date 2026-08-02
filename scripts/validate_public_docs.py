@@ -57,12 +57,24 @@ SCAN_TOOL_SELECTION_MARKERS = (
     "Why: detect deterministic static drift and risk before the change ships.",
 )
 SCAN_WALKTHROUGH_HEADING = "## Walkthrough: remediate a risky agent instruction"
+SCAN_WALKTHROUGH_MARKERS = (
+    "https://example.invalid/flowharness-scan-fixture",
+    "injection_heuristics_check",
+    "override, exfil, remote_exec",
+    "QUARANTINE",
+)
 VIBE_TOOL_SELECTION_MARKERS = (
     "Who: teams that own an agent's expected behavior.",
     "When: after changing prompts, rules, skills, tools, or other agent context.",
     "Why: replay committed cases to prove the intended behavior still holds.",
 )
 VIBE_WALKTHROUGH_HEADING = "## Walkthrough: correct a committed cassette failure"
+VIBE_WALKTHROUGH_MARKERS = (
+    "support-agent billing-dispute",
+    "human escalation",
+    "recorded candidate output",
+    "offline replay",
+)
 VIBE_OFFLINE_BOUNDARY = (
     "The released Vibe Check replay evaluation is offline and uses no live model."
 )
@@ -152,8 +164,11 @@ NEGATED_SOURCE_MIRROR_PREFIX = re.compile(
     r"\bnot\s+(?:(?:a|the)\s+)?(?:complete\s+)?(?:VCS\s+)?$",
     re.IGNORECASE,
 )
-INTERNAL_ROOTS = frozenset({".git", ".ruff_cache", ".superpowers"})
+INTERNAL_ROOTS = frozenset({".git", ".ruff_cache"})
 INTERNAL_FILES = frozenset({".claude/napkin.md"})
+INTERNAL_SDD_METADATA = re.compile(
+    r"^\.superpowers/sdd/(?:\.gitignore|[^/]+/(?:task-\d+-(?:brief|report)\.md|review-[0-9a-f]+\.\.[0-9a-f]+\.diff))$"
+)
 
 
 def _discover_repository_files(root: Path) -> tuple[str, ...]:
@@ -166,6 +181,7 @@ def _discover_repository_files(root: Path) -> tuple[str, ...]:
         if (
             relative_path.parts[0] in INTERNAL_ROOTS
             or relative_path_string in INTERNAL_FILES
+            or INTERNAL_SDD_METADATA.fullmatch(relative_path_string)
             or "__pycache__" in relative_path.parts
             or path.suffix == ".pyc"
         ):
@@ -436,10 +452,14 @@ def _validate_onboarding_contracts(
         errors.append("docs/scan.md missing Scan who/when/why contract")
     if SCAN_WALKTHROUGH_HEADING not in scan:
         errors.append("docs/scan.md missing Scan walkthrough")
+    if not all(marker in scan for marker in SCAN_WALKTHROUGH_MARKERS):
+        errors.append("docs/scan.md missing required Scan walkthrough content")
     if not all(marker in vibe_check for marker in VIBE_TOOL_SELECTION_MARKERS):
         errors.append("docs/vibe-check.md missing Vibe Check who/when/why contract")
     if VIBE_WALKTHROUGH_HEADING not in vibe_check:
         errors.append("docs/vibe-check.md missing Vibe Check walkthrough")
+    if not all(marker in vibe_check for marker in VIBE_WALKTHROUGH_MARKERS):
+        errors.append("docs/vibe-check.md missing required Vibe Check walkthrough content")
     if VIBE_OFFLINE_BOUNDARY not in vibe_check:
         errors.append("docs/vibe-check.md missing exact offline/no-live-model boundary")
 

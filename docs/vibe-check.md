@@ -53,11 +53,23 @@ not part of this released workflow.
 
 ## Walkthrough: correct a committed cassette failure
 
-A pull request changes an agent rule and a committed cassette now replays an answer that omits a
-required human approval. Vibe Check fails the replay instead of accepting the changed behavior.
-Inspect the cassette, the expected answer, and the changed rule together; correct the rule so the
-approval remains required, rather than editing the expected result to bless a regression. Rerun
-the same pinned replay command and commit the corrected rule with the passing cassette evidence.
+Commit the following support-agent billing-dispute evidence with the replay suite. This case
+requires human escalation; it is committed test data, not a live support interaction:
+
+```text
+case: support-agent billing-dispute
+expected: "I will escalate this billing dispute to a human support specialist."
+recorded candidate output: "I have closed the billing dispute."
+```
+
+The recorded candidate output omits the required human escalation, so the offline replay fails.
+It does not call a live model: the replay compares committed evidence and the changed rule. Because
+the approved policy still requires escalation, keep the expected evidence and correct the committed
+rule so the candidate explicitly escalates. If an accountable reviewer deliberately changes that
+policy, update the committed evidence and rule together in the reviewed pull request instead.
+
+Rerun the same pinned replay command after the correction and record the passing offline replay.
+The corrected committed rule and evidence should produce `PASS` before merge.
 
 On a same-repository pull request, the next Action run updates the existing marker-keyed sticky
 comment and appends the corrected result to the step summary; it does not create a second comment.
