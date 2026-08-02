@@ -36,6 +36,16 @@ The index measures context drift. The word after the dash is the gate:
 Exit `1` can also indicate a scanner error, and exit `2` can also indicate invalid command usage.
 Read stderr and confirm a report was emitted before interpreting either code as a verdict.
 
+## Choose the right tool
+
+| Need | Start with | What it answers |
+| --- | --- | --- |
+| A pull request changes agent rules, prompts, skills, or related files | [FlowHarness Scan](scan.md) | Whether deterministic static drift or risk needs remediation before merge. |
+| A pull request changes how an agent should respond | [FlowHarness Vibe Check](vibe-check.md) | Whether committed replay cases still demonstrate the intended behavior. |
+
+Use both when a behavior change also changes agent-context files: Scan is the static hygiene gate;
+Vibe Check is the committed-behavior gate.
+
 ## Choose the next action
 
 - Investigate or remediate a finding with [Findings and verdicts](findings-and-verdicts.md).

@@ -51,6 +51,44 @@ VERSION_MATRIX_ROWS = (
     ("Vibe Check Action", "v1.0.1", "flowharness-ci-runner 0.1.1"),
 )
 
+SCAN_TOOL_SELECTION_MARKERS = (
+    "Who: repository maintainers and reviewers.",
+    "When: before merging a pull request that changes agent-context files.",
+    "Why: detect deterministic static drift and risk before the change ships.",
+)
+SCAN_WALKTHROUGH_HEADING = "## Walkthrough: remediate a risky agent instruction"
+SCAN_WALKTHROUGH_MARKERS = (
+    "https://example.invalid/flowharness-scan-fixture",
+    "injection_heuristics_check",
+    "override, exfil, remote_exec",
+    "QUARANTINE",
+    "--format json",
+)
+VIBE_TOOL_SELECTION_MARKERS = (
+    "Who: teams that own an agent's expected behavior.",
+    "When: after changing prompts, rules, skills, tools, or other agent context.",
+    "Why: replay committed cases to prove the intended behavior still holds.",
+)
+VIBE_WALKTHROUGH_HEADING = "## Walkthrough: correct a committed cassette failure"
+VIBE_WALKTHROUGH_MARKERS = (
+    "support-agent billing-dispute",
+    "human escalation",
+    "recorded candidate output",
+    "offline replay",
+)
+VIBE_CASSETTE_SCHEMA_MARKERS = (
+    '"schema": "flowharness/ci-case/v1"',
+    '"recorded_output":',
+    '"expected": {"contains":',
+)
+VIBE_CASSETTE_CORRECTION = (
+    "The corrected committed cassette must record candidate output that includes the "
+    "required human escalation before offline replay can pass."
+)
+VIBE_OFFLINE_BOUNDARY = (
+    "The released Vibe Check replay evaluation is offline and uses no live model."
+)
+
 WORKFLOW_CONTRACTS = {
     "examples/scan.yml": {
         "action": "flowharness-ai/scan-action@v1",
@@ -138,6 +176,9 @@ NEGATED_SOURCE_MIRROR_PREFIX = re.compile(
 )
 INTERNAL_ROOTS = frozenset({".git", ".ruff_cache"})
 INTERNAL_FILES = frozenset({".claude/napkin.md"})
+INTERNAL_SDD_METADATA = re.compile(
+    r"^\.superpowers/sdd/(?:\.gitignore|[^/]+/(?:task-\d+-(?:brief|report)\.md|review-[0-9a-f]+\.\.[0-9a-f]+\.diff))$"
+)
 
 
 def _discover_repository_files(root: Path) -> tuple[str, ...]:
@@ -150,6 +191,7 @@ def _discover_repository_files(root: Path) -> tuple[str, ...]:
         if (
             relative_path.parts[0] in INTERNAL_ROOTS
             or relative_path_string in INTERNAL_FILES
+            or INTERNAL_SDD_METADATA.fullmatch(relative_path_string)
             or "__pycache__" in relative_path.parts
             or path.suffix == ".pyc"
         ):
@@ -410,6 +452,34 @@ def _validate_product_contract(texts: Mapping[str, str], errors: list[str]) -> N
     _validate_version_matrix(readme, errors)
 
 
+def _validate_onboarding_contracts(
+    texts: Mapping[str, str], errors: list[str]
+) -> None:
+    scan = texts.get("docs/scan.md", "")
+    vibe_check = texts.get("docs/vibe-check.md", "")
+
+    if not all(marker in scan for marker in SCAN_TOOL_SELECTION_MARKERS):
+        errors.append("docs/scan.md missing Scan who/when/why contract")
+    if SCAN_WALKTHROUGH_HEADING not in scan:
+        errors.append("docs/scan.md missing Scan walkthrough")
+    if not all(marker in scan for marker in SCAN_WALKTHROUGH_MARKERS):
+        errors.append("docs/scan.md missing required Scan walkthrough content")
+    if not all(marker in vibe_check for marker in VIBE_TOOL_SELECTION_MARKERS):
+        errors.append("docs/vibe-check.md missing Vibe Check who/when/why contract")
+    if VIBE_WALKTHROUGH_HEADING not in vibe_check:
+        errors.append("docs/vibe-check.md missing Vibe Check walkthrough")
+    if not all(marker in vibe_check for marker in VIBE_WALKTHROUGH_MARKERS):
+        errors.append("docs/vibe-check.md missing required Vibe Check walkthrough content")
+    if not all(marker in vibe_check for marker in VIBE_CASSETTE_SCHEMA_MARKERS):
+        errors.append(
+            "docs/vibe-check.md missing required Vibe Check cassette schema content"
+        )
+    if VIBE_CASSETTE_CORRECTION not in vibe_check:
+        errors.append("docs/vibe-check.md missing exact committed-cassette correction")
+    if VIBE_OFFLINE_BOUNDARY not in vibe_check:
+        errors.append("docs/vibe-check.md missing exact offline/no-live-model boundary")
+
+
 def _validate_provenance(texts: Mapping[str, str], errors: list[str]) -> None:
     relative_path = "docs/source-and-provenance.md"
     provenance = texts.get(relative_path, "")
@@ -507,6 +577,7 @@ def validate_repository(root: Path = REPOSITORY_ROOT) -> list[str]:
         _validate_workflow(root, relative_path, errors)
     _validate_markdown_links(root, texts, errors)
     _validate_product_contract(texts, errors)
+    _validate_onboarding_contracts(texts, errors)
     _validate_provenance(texts, errors)
     return list(dict.fromkeys(errors))
 
