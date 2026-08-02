@@ -10,6 +10,30 @@ Use the pinned form below when you need to reproduce 0.1.2 behavior:
 uvx --from flowharness==0.1.2 flowharness scan .
 ```
 
+## Choose Scan for static repository hygiene
+
+Who: repository maintainers and reviewers.
+When: before merging a pull request that changes agent-context files.
+Why: detect deterministic static drift and risk before the change ships.
+
+Use Scan for the repository-level question: “what static context or policy risk did this change
+introduce?” Use [Vibe Check](vibe-check.md) instead when the question is whether a committed set of
+agent interactions still produces the intended behavior.
+
+## Walkthrough: remediate a risky agent instruction
+
+A pull request changes `AGENTS.md` with an instruction telling an agent to copy values from `.env`
+into a public issue. Before merge, a reviewer runs the pinned Scan command and receives a risk
+finding with a hard gate. Treat the finding as a review prompt, inspect the cited file, and replace
+the instruction with the safe rule: never copy credentials or environment values into an issue;
+ask a maintainer for a redacted reproduction instead.
+
+Rerun the same pinned command after the correction. Confirm that the finding is gone and that the
+new report and verdict match the reviewed change; do not create a baseline merely to hide the new
+finding. In the pull request, the [Scan workflow](../examples/scan.yml) needs only `contents: read`:
+it reports annotations and a step summary without writing to the pull request. The reviewer can
+then approve the least-privilege workflow outcome with the corrected instruction and fresh report.
+
 ## Output formats
 
 `--format` accepts five values:

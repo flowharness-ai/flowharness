@@ -83,6 +83,17 @@ Action source.
 
 Start with the [Getting started guide](docs/getting-started.md).
 
+## Choose the right tool
+
+| If you need to… | Choose | Why |
+| --- | --- | --- |
+| Review a repository's agent-context files before merging a pull request | [FlowHarness Scan](docs/scan.md) | It deterministically finds static drift and risk without running an evaluation. |
+| Prove an agent-context change preserves expected behavior | [FlowHarness Vibe Check](docs/vibe-check.md) | It replays committed cases and reports the result on the pull request. |
+
+Run Scan first when the question is “what static repository risk changed?” Add Vibe Check when the
+question is “does this change still behave as our committed cases expect?” They are complementary
+signals, not interchangeable gates.
+
 ## Version matrix
 
 | Surface | Released version | Embedded Python artifact |
