@@ -125,6 +125,17 @@ Read [Organization-wide governance](docs/organizational-platform.md) or visit
 - [Troubleshooting](docs/troubleshooting.md)
 - [Organization-wide governance](docs/organizational-platform.md)
 
+## External acceptance
+
+The public onboarding runbook is preserved in the archived
+[external acceptance repository](https://github.com/flowharness-ai/public-docs-acceptance-20260801).
+The evidence includes [pull request 1](https://github.com/flowharness-ai/public-docs-acceptance-20260801/pull/1),
+the restored-green [Scan run 30749326003](https://github.com/flowharness-ai/public-docs-acceptance-20260801/actions/runs/30749326003),
+the restored-green [Vibe Check run 30749326004](https://github.com/flowharness-ai/public-docs-acceptance-20260801/actions/runs/30749326004),
+the single updated [sticky comment 5158062641](https://github.com/flowharness-ai/public-docs-acceptance-20260801/pull/1#issuecomment-5158062641),
+and annotated tag
+[`public-docs-accepted-2026-08-01`](https://github.com/flowharness-ai/public-docs-acceptance-20260801/releases/tag/public-docs-accepted-2026-08-01).
+
 ## Release and project policies
 
 The six released Python distributions are
