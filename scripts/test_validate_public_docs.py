@@ -56,6 +56,18 @@ PROVENANCE = (
     ),
 )
 
+SCAN_TOOL_SELECTION_CONTRACT = """Who: repository maintainers and reviewers.
+When: before merging a pull request that changes agent-context files.
+Why: detect deterministic static drift and risk before the change ships."""
+SCAN_WALKTHROUGH_HEADING = "## Walkthrough: remediate a risky agent instruction"
+VIBE_TOOL_SELECTION_CONTRACT = """Who: teams that own an agent's expected behavior.
+When: after changing prompts, rules, skills, tools, or other agent context.
+Why: replay committed cases to prove the intended behavior still holds."""
+VIBE_WALKTHROUGH_HEADING = "## Walkthrough: correct a committed cassette failure"
+VIBE_OFFLINE_BOUNDARY = (
+    "The released Vibe Check replay evaluation is offline and uses no live model."
+)
+
 SCAN_WORKFLOW = """name: FlowHarness Scan
 "on":
   pull_request:
@@ -130,8 +142,19 @@ repositories contain Action source; released Python source is in the Apache-2.0 
 
     docs = {
         "getting-started.md": "# Getting started\n",
-        "scan.md": "# FlowHarness Scan\n",
-        "vibe-check.md": "# FlowHarness Vibe Check\n",
+        "scan.md": (
+            "# FlowHarness Scan\n\n"
+            "## Choose Scan for static repository hygiene\n\n"
+            f"{SCAN_TOOL_SELECTION_CONTRACT}\n\n"
+            f"{SCAN_WALKTHROUGH_HEADING}\n"
+        ),
+        "vibe-check.md": (
+            "# FlowHarness Vibe Check\n\n"
+            "## Choose Vibe Check for replay behavior\n\n"
+            f"{VIBE_TOOL_SELECTION_CONTRACT}\n\n"
+            f"{VIBE_OFFLINE_BOUNDARY}\n\n"
+            f"{VIBE_WALKTHROUGH_HEADING}\n"
+        ),
         "findings-and-verdicts.md": "# Findings and verdicts\n",
         "adoption-and-baselines.md": "# Adoption and baselines\n",
         "privacy-permissions-and-tokens.md": "# Privacy, permissions, and tokens\n",
@@ -168,7 +191,9 @@ class PublicDocsValidatorTests(unittest.TestCase):
         shutil.copytree(
             REPOSITORY_ROOT,
             self.root,
-            ignore=shutil.ignore_patterns(".git", ".claude", "__pycache__"),
+            ignore=shutil.ignore_patterns(
+                ".git", ".claude", ".superpowers", "__pycache__"
+            ),
         )
         _populate_valid_public_hub(self.root)
 
@@ -456,6 +481,30 @@ class PublicDocsValidatorTests(unittest.TestCase):
             "README.md", "docs/organizational-platform.md", "docs/getting-started.md"
         )
         self.assert_rejected("missing organizational-platform bridge")
+
+    def test_rejects_missing_scan_tool_selection_contract(self) -> None:
+        self.replace_once("docs/scan.md", SCAN_TOOL_SELECTION_CONTRACT, "")
+        self.assert_rejected("docs/scan.md missing Scan who/when/why contract")
+
+    def test_rejects_missing_scan_walkthrough(self) -> None:
+        self.replace_once("docs/scan.md", SCAN_WALKTHROUGH_HEADING, "")
+        self.assert_rejected("docs/scan.md missing Scan walkthrough")
+
+    def test_rejects_missing_vibe_tool_selection_contract(self) -> None:
+        self.replace_once("docs/vibe-check.md", VIBE_TOOL_SELECTION_CONTRACT, "")
+        self.assert_rejected(
+            "docs/vibe-check.md missing Vibe Check who/when/why contract"
+        )
+
+    def test_rejects_missing_vibe_walkthrough(self) -> None:
+        self.replace_once("docs/vibe-check.md", VIBE_WALKTHROUGH_HEADING, "")
+        self.assert_rejected("docs/vibe-check.md missing Vibe Check walkthrough")
+
+    def test_rejects_missing_vibe_offline_no_live_model_boundary(self) -> None:
+        self.replace_once("docs/vibe-check.md", VIBE_OFFLINE_BOUNDARY, "")
+        self.assert_rejected(
+            "docs/vibe-check.md missing exact offline/no-live-model boundary"
+        )
 
     def test_rejects_wrong_local_cli_version_matrix_entry(self) -> None:
         self.replace_once("README.md", "| Local CLI | 0.1.2 |", "| Local CLI | 0.1.1 |")
