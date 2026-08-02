@@ -62,6 +62,7 @@ SCAN_WALKTHROUGH_MARKERS = (
     "injection_heuristics_check",
     "override, exfil, remote_exec",
     "QUARANTINE",
+    "--format json",
 )
 VIBE_TOOL_SELECTION_MARKERS = (
     "Who: teams that own an agent's expected behavior.",
@@ -74,6 +75,15 @@ VIBE_WALKTHROUGH_MARKERS = (
     "human escalation",
     "recorded candidate output",
     "offline replay",
+)
+VIBE_CASSETTE_SCHEMA_MARKERS = (
+    '"schema": "flowharness/ci-case/v1"',
+    '"recorded_output":',
+    '"expected": {"contains":',
+)
+VIBE_CASSETTE_CORRECTION = (
+    "The corrected committed cassette must record candidate output that includes the "
+    "required human escalation before offline replay can pass."
 )
 VIBE_OFFLINE_BOUNDARY = (
     "The released Vibe Check replay evaluation is offline and uses no live model."
@@ -460,6 +470,12 @@ def _validate_onboarding_contracts(
         errors.append("docs/vibe-check.md missing Vibe Check walkthrough")
     if not all(marker in vibe_check for marker in VIBE_WALKTHROUGH_MARKERS):
         errors.append("docs/vibe-check.md missing required Vibe Check walkthrough content")
+    if not all(marker in vibe_check for marker in VIBE_CASSETTE_SCHEMA_MARKERS):
+        errors.append(
+            "docs/vibe-check.md missing required Vibe Check cassette schema content"
+        )
+    if VIBE_CASSETTE_CORRECTION not in vibe_check:
+        errors.append("docs/vibe-check.md missing exact committed-cassette correction")
     if VIBE_OFFLINE_BOUNDARY not in vibe_check:
         errors.append("docs/vibe-check.md missing exact offline/no-live-model boundary")
 

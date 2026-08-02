@@ -36,13 +36,16 @@ not put them in an agent instruction file used by people or automation:
 Run the pinned scanner against that disposable directory:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan .flowharness-demo --fail-on risk
+uvx --from flowharness==0.1.2 flowharness scan .flowharness-demo \
+  --format json --fail-on risk
 ```
 
-The resulting critical finding names `injection_heuristics_check` and reports three corroborating
-signal categories: `override, exfil, remote_exec`. The risk gate therefore produces
-`QUARANTINE`; the report names categories rather than repeating matching spans. This is a safe,
-reproducible test of the released detector, not a pattern to copy into a real rule.
+Inspect the JSON report: its critical finding names `injection_heuristics_check` and reports three
+corroborating signal categories, `override, exfil, remote_exec`. Its `risk_assessment.verdict` is
+`fail`, which is the shared verdict behind the banner's `QUARANTINE` / `FAIL` mapping, and the
+command exits `2`. JSON—not the default banner—exposes the check ID and categories without
+repeating matching spans. This is a safe, reproducible test of the released detector, not a
+pattern to copy into a real rule.
 
 For a real pull request, remove the injected directive rather than baselining it. Replace it with
 the safe rule: never copy credentials or environment values into an issue; ask a maintainer for a
