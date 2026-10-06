@@ -51,6 +51,19 @@ The gate matters too. `--fail-on risk` uses the three-way risk verdict above. `-
 findings absent from a supplied committed baseline. Changing the output format does not change the
 gate.
 
+## Third-party findings in Vibe Check
+
+Vibe Check can also gate findings from other scanners, such as SARIF reports passed through the
+Action's `external-findings` input or produced by its
+[SkillSpector step](vibe-check.md#gate-skillspector-findings). These findings stay separate from
+the replay metrics: the comment shows them in a "Third-party checks" row per tool, and they never
+change the safety score.
+
+Each finding has the check ID `external.<tool>.<rule>`. A SARIF `security-severity` of 9.0 or more
+is `critical`; otherwise the tool's own severity or the SARIF `level` gives it. A finding whose severity cannot be
+mapped is marked unmapped, and by default an unmapped finding needs a human. The `[external]`
+section of the gate policy sets the thresholds for each severity.
+
 ## Remediation workflow
 
 1. Confirm the scan completed and record the exact command, version, gate, and report.

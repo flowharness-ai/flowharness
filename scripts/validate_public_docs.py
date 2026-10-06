@@ -48,7 +48,7 @@ VERSION_MATRIX_SEPARATOR = ("---", "---", "---")
 VERSION_MATRIX_ROWS = (
     ("Local CLI", "0.1.2", "flowharness 0.1.2"),
     ("Scan Action", "v1.0.1", "flowharness 0.1.2"),
-    ("Vibe Check Action", "v1.0.1", "flowharness-ci-runner 0.1.1"),
+    ("Vibe Check Action", "v1.1.0", "flowharness-ci-runner 0.3.0"),
 )
 
 SCAN_TOOL_SELECTION_MARKERS = (
@@ -431,7 +431,7 @@ def _validate_version_matrix(readme: str, errors: list[str]) -> None:
         )
     if VERSION_MATRIX_ROWS[2] not in parsed_rows:
         errors.append(
-            "README.md version matrix must identify Vibe Action v1.0.1 with embedded runner 0.1.1"
+            "README.md version matrix must identify Vibe Action v1.1.0 with embedded runner 0.3.0"
         )
 
 

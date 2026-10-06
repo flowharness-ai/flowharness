@@ -14,7 +14,7 @@ The released Vibe Check replay evaluation is offline and uses no live model. Pac
 and the optional platform upload remain separate network decisions; see [privacy and tokens](privacy-permissions-and-tokens.md).
 Use [Scan](scan.md) first for deterministic static drift and risk in repository files.
 
-## Prepare a repository with the 0.1.2 tools
+## Prepare a repository
 
 Run these developer commands from a Git repository with its agent-context files tracked. First
 initialize FlowHarness configuration without generating another workflow or hook:
@@ -27,7 +27,7 @@ uvx --no-config --no-sources --from flowharness==0.1.2 \
 Then generate starter replay cases, the suite lockfile, and the starter gate policy:
 
 ```console
-uvx --no-config --no-sources --from flowharness-ci-runner==0.1.2 \
+uvx --no-config --no-sources --from flowharness-ci-runner==0.3.0 \
   flowharness-ci seed
 ```
 
@@ -40,10 +40,10 @@ Starter cases are scaffolding, not a production oracle. Curate, replace, or remo
 case so its expected output captures behavior your team is prepared to maintain, then commit that
 reviewed suite before relying on it as a gate.
 
-You can exercise the released 0.1.2 runner locally:
+You can exercise the released 0.3.0 runner locally:
 
 ```console
-uvx --no-config --no-sources --from flowharness-ci-runner==0.1.2 \
+uvx --no-config --no-sources --from flowharness-ci-runner==0.3.0 \
   flowharness-ci vibe-check --base origin/main --executor replay
 ```
 
@@ -110,13 +110,10 @@ checks out full history with `fetch-depth: 0`, grants only `contents: read` and
 `pull-requests: write`, and selects the `replay` executor.
 
 The stable `flowharness-ai/vibe-check-action@v1` tag currently resolves to
-[Vibe Check Action 1.0.1](https://github.com/flowharness-ai/vibe-check-action). That Action embeds
-`flowharness-ci-runner` 0.1.1. Patch 1.0.1 isolates every runner resolution with uv's
-`--no-config --no-sources` flags but intentionally retains the 0.1.1 runner; it did not publish or
-substitute a Python 0.1.2 runtime. Claims about the Action's embedded runtime therefore remain
-scoped to runner 0.1.1. The 0.1.2 commands above prepare and locally exercise the separately
-released 0.1.2 tools. Keep this boundary explicit: the walkthrough's local commands use runner
-0.1.2, while the released Vibe Check Action v1.0.1 embeds runner 0.1.1.
+[Vibe Check Action 1.1.0](https://github.com/flowharness-ai/vibe-check-action). That Action embeds
+`flowharness-ci-runner` 0.3.0, the same runner as the local commands above. Every runner
+resolution uses uv's `--no-config --no-sources` flags and an exact version pin, so a persistent uv
+configuration on the runner cannot change the package that runs.
 
 On a same-repository pull request, the Action always appends the body to the step summary and uses
 GitHub's built-in token to create or update the one marker-keyed sticky comment. A comment-post
@@ -126,6 +123,46 @@ On a fork pull request, GitHub does not expose repository secrets and does not g
 token needed for a comment. The Action skips the sticky comment, emits a fixed notice, keeps the
 full report in the step summary, and propagates the local replay verdict. It does not use
 `pull_request_target` to recover privileges.
+
+## Gate SkillSpector findings
+
+[NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector) is an open-source security scanner
+for agent skills. Its static rules cover prompt injection, data exfiltration, supply-chain risk,
+MCP tool poisoning, and other unsafe patterns. The Vibe Check Action can run it on your
+skills and gate its findings in the same sticky comment:
+
+```yaml
+- uses: flowharness-ai/vibe-check-action@v1
+  with:
+    executor: replay
+    skillspector: "true"                 # only the exact string "true" turns the step on
+    skillspector-path: .claude/skills    # the default; the scan is recursive
+```
+
+With `skillspector: "true"`, the Action runs SkillSpector before the replay gate, writes its SARIF
+report to the runner's temporary directory, and adds that file to the `external-findings` list.
+The comment then shows a "Third-party checks" row for `skillspector` with its critical, error,
+warning, and unmapped counts.
+
+- **Pinned and static.** SkillSpector is not on PyPI, so the Action runs it from a fixed upstream
+  commit. The Action always passes `--no-llm`: skill content stays on the runner and goes to no
+  model provider, even if a provider key is in the step environment. Only the commit is pinned;
+  SkillSpector's own dependencies resolve when the step runs.
+- **The gate decides.** SkillSpector exits non-zero on a high risk score. The Action keeps that
+  exit code out of the job result and lets the FlowHarness verdict decide from the report. A
+  result with `security-severity` 9.0 or more is critical. If no report is written, the runner
+  refuses the missing file and the job fails closed.
+- **Incomplete scans are visible.** When SkillSpector reports a partial analysis (for example, a
+  dependency database it could not reach), the gate adds one
+  `external.skillspector.analysis_incomplete` finding. By default that finding needs a human.
+- **Suppressions still count.** SkillSpector can mark a finding as accepted by a baseline file.
+  The baseline lives in the scanned repository, so a pull request can add its own finding to it.
+  FlowHarness therefore counts suppressed findings and still gates them, unless the gate policy
+  sets `honor_suppressions = true` in its `[external]` section.
+
+Without the input, the Action does not run SkillSpector and builds exactly the same command as
+before. You can also run any SARIF scanner in your own step and pass its report through
+`external-findings`.
 
 ## Optional signed platform upload
 
@@ -159,5 +196,5 @@ because secrets are unavailable.
 Keep both values on the invoking Action step—not workflow or job `env`, and never `with`. This
 limits their exposure to that composite invocation. Residual risk remains: a composite Action's
 child processes and internal steps inherit the invoking step environment. Review the public Action
-source and replace `@v1` with the immutable 1.0.1 release commit SHA when your policy requires a
+source and replace `@v1` with the immutable 1.1.0 release commit SHA when your policy requires a
 fixed supply-chain identity.

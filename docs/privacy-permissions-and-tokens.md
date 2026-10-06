@@ -14,6 +14,13 @@ account-free, and makes no network calls. FlowHarness Vibe Check's `replay` exec
 and offline once its released packages and committed cases are present. Neither statement means
 that `uvx` package resolution is offline.
 
+The optional SkillSpector step of the Vibe Check Action is a separate network decision. When you
+set `skillspector: "true"`, the step downloads SkillSpector from GitHub and its dependencies from
+PyPI, and its dependency checks query [OSV.dev](https://osv.dev) for known vulnerabilities. The
+step always runs SkillSpector with `--no-llm`, so it sends skill content to no model provider. Its
+findings reach the step summary and the sticky comment, and the signed run only when you enable
+platform upload.
+
 Explicit output options can write a report, shell redirection can create a baseline, and the
 developer `init` and `seed` commands intentionally create setup files. Those are opt-in operations;
 an ordinary scan does not modify the inspected tree. Uploading SARIF to another service or

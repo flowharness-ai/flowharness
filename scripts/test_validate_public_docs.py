@@ -154,7 +154,7 @@ repositories contain Action source; released Python source is in the Apache-2.0 
 | --- | --- | --- |
 | Local CLI | 0.1.2 | flowharness 0.1.2 |
 | Scan Action | v1.0.1 | flowharness 0.1.2 |
-| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |
+| Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |
 """
     _write(root / "README.md", readme)
     _write(
@@ -642,7 +642,7 @@ class PublicDocsValidatorTests(unittest.TestCase):
 | --- | --- | --- |
 | Local CLI | 0.1.2 | flowharness 0.1.2 |
 | Scan Action | v1.0.1 | flowharness 0.1.2 |
-| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |
+| Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |
 """
         self.append("README.md", f"\n{matrix}")
         self.assert_rejected("README.md must contain exactly one version matrix")
@@ -650,8 +650,8 @@ class PublicDocsValidatorTests(unittest.TestCase):
     def test_rejects_additional_version_matrix_row(self) -> None:
         self.replace_once(
             "README.md",
-            "| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |\n",
-            "| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |\n"
+            "| Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |\n",
+            "| Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |\n"
             "| Future Action | v2.0.0 | future-runner 2.0.0 |\n",
         )
         self.assert_rejected("version matrix rows must be exactly")
@@ -681,11 +681,11 @@ class PublicDocsValidatorTests(unittest.TestCase):
     def test_rejects_wrong_vibe_action_matrix_entry(self) -> None:
         self.replace_once(
             "README.md",
+            "| Vibe Check Action | v1.1.0 |",
             "| Vibe Check Action | v1.0.1 |",
-            "| Vibe Check Action | v1.0.0 |",
         )
         self.assert_rejected(
-            "version matrix must identify Vibe Action v1.0.1 with embedded runner 0.1.1"
+            "version matrix must identify Vibe Action v1.1.0 with embedded runner 0.3.0"
         )
 
 
