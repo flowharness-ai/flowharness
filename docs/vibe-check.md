@@ -20,7 +20,7 @@ Run these developer commands from a Git repository with its agent-context files 
 initialize FlowHarness configuration without generating another workflow or hook:
 
 ```console
-uvx --no-config --no-sources --from flowharness==0.1.2 \
+uvx --no-config --no-sources --from flowharness==0.3.0 \
   flowharness init --dir . --hook none --workflow none
 ```
 

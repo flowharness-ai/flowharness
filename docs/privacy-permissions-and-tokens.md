@@ -9,7 +9,7 @@ platform upload. Review each boundary independently.
 GitHub Actions can also contact their declared Action and tool sources during job setup. That is
 installation traffic, before the scanner starts.
 
-The default FlowHarness Scan 0.1.2 execution is deterministic, read-only, zero-model,
+The default FlowHarness Scan 0.3.0 execution is deterministic, read-only, zero-model,
 account-free, and makes no network calls. FlowHarness Vibe Check's `replay` executor is also local
 and offline once its released packages and committed cases are present. Neither statement means
 that `uvx` package resolution is offline.

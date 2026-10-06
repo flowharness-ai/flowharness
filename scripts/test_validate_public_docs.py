@@ -20,39 +20,39 @@ OPEN_CORE = (
 PROVENANCE = (
     (
         "flowharness",
-        "flowharness-0.1.2.tar.gz",
-        "https://files.pythonhosted.org/packages/23/f3/769098b150a9cb74fb0e821a5f43fc31d0fd3ef044604545b98c2f2eeb86/flowharness-0.1.2.tar.gz",
-        "22aa011394c3724596b3cefadd79209254454befddc8c774b863beb3284c1b9a",
+        "flowharness-0.3.0.tar.gz",
+        "https://files.pythonhosted.org/packages/88/65/1ba7a68c84d4b434a82b6df7e046611a22f53476c9db7f8d0ed6450284a6/flowharness-0.3.0.tar.gz",
+        "ba05d5927f29ad25a2d5cc340e987b4a1a7918c3df442bb44f009cb919c46a5d",
     ),
     (
         "flowharness-ci-runner",
-        "flowharness_ci_runner-0.1.2.tar.gz",
-        "https://files.pythonhosted.org/packages/4a/91/be715d7b789d4137280e5925a0a0954d752bfbbe50228c677c6b9e5b7fcf/flowharness_ci_runner-0.1.2.tar.gz",
-        "0dbe4cd4f9d033f3b90c558d104092755d16e485d01382dbc203c8ee10b9e862",
+        "flowharness_ci_runner-0.3.0.tar.gz",
+        "https://files.pythonhosted.org/packages/f2/1f/a021f27e8c23e27a222216f4489fe33e4b1d9841960794f48eaea0e28cbd/flowharness_ci_runner-0.3.0.tar.gz",
+        "79f89c646a2e34343c1926a47979b6830d112abcb3fff709316aa5e61cd68604",
     ),
     (
         "flowharness-core",
-        "flowharness_core-0.1.2.tar.gz",
-        "https://files.pythonhosted.org/packages/f3/28/4ec191d523985d698ea2a31c0a19d0d6ec6b18839d7ba207aad7b0532660/flowharness_core-0.1.2.tar.gz",
-        "f9ae6640ea254e6df6905230470f70b027ec58b6d689a03afa96077d4bae5f8a",
+        "flowharness_core-0.3.0.tar.gz",
+        "https://files.pythonhosted.org/packages/70/f6/d6cb39c0f6344d7eba6ae3c9882f20c7f0359b4af2bb252b0a962fa09371/flowharness_core-0.3.0.tar.gz",
+        "cf04e0c594c0b4cdf9034e11909f4b09b01d988f17ed91dc25c13f564cfe0d5f",
     ),
     (
         "flowharness-inspection",
-        "flowharness_inspection-0.1.2.tar.gz",
-        "https://files.pythonhosted.org/packages/76/72/da782bb1e4cb0af47a53a0701a0de0f20b3d5e7a73e447468798dbfcd99b/flowharness_inspection-0.1.2.tar.gz",
-        "539bfafecda148a0b1f6db2a06d5d481e2b266333578abf4e64ece692ad29643",
+        "flowharness_inspection-0.3.0.tar.gz",
+        "https://files.pythonhosted.org/packages/88/20/2786a8ec9bec5b599c558b53dda3b4bed61e56240eb0515252c233a14fc5/flowharness_inspection-0.3.0.tar.gz",
+        "e23fe1f4e6b7f467f008c54434f9b7a766883a07ff91fd593ed340ff66f21829",
     ),
     (
         "flowharness-evaluation",
-        "flowharness_evaluation-0.1.2.tar.gz",
-        "https://files.pythonhosted.org/packages/88/17/a02bb845fd543ab78443aba4c36cb5e61f9b8a50d505f8eeb5268d2fcfa4/flowharness_evaluation-0.1.2.tar.gz",
-        "2c00ed71d360c25b5839ba048dc70e42bce2c2a6f40646980ea3c5884f914cf1",
+        "flowharness_evaluation-0.3.0.tar.gz",
+        "https://files.pythonhosted.org/packages/20/06/5191f47cf9739145ccd6558ad59019ba16788c04c147aaf7f9bb421d8193/flowharness_evaluation-0.3.0.tar.gz",
+        "488b22b72080f976fe5e9b4fa0d140230dccadd1bfec442cbe678eb8cceedf2b",
     ),
     (
         "flowharness-portability",
-        "flowharness_portability-0.1.2.tar.gz",
-        "https://files.pythonhosted.org/packages/c7/b5/2c3c1734cc8322b488c5daa90ed0ee4e0a829fa8ab06d07fcf90145c6705/flowharness_portability-0.1.2.tar.gz",
-        "9d83492d93730bb5cb37d2352d50a3d2a3b4d3ca818fe6fdff9af403d3877af2",
+        "flowharness_portability-0.3.0.tar.gz",
+        "https://files.pythonhosted.org/packages/d3/2e/07a9f2d57e4ad0457ebf7634a56395a98a2807cbd402cfbf635ffbe88234/flowharness_portability-0.3.0.tar.gz",
+        "20583b266aad2c6002d219e015d743c96c78172be16283bca878410cc8bf8086",
     ),
 )
 
@@ -152,8 +152,8 @@ repositories contain Action source; released Python source is in the Apache-2.0 
 
 | Surface | Released version | Embedded Python artifact |
 | --- | --- | --- |
-| Local CLI | 0.1.2 | flowharness 0.1.2 |
-| Scan Action | v1.0.1 | flowharness 0.1.2 |
+| Local CLI | 0.3.0 | flowharness 0.3.0 |
+| Scan Action | v1.1.0 | flowharness 0.3.0 |
 | Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |
 """
     _write(root / "README.md", readme)
@@ -624,8 +624,8 @@ class PublicDocsValidatorTests(unittest.TestCase):
         )
 
     def test_rejects_wrong_local_cli_version_matrix_entry(self) -> None:
-        self.replace_once("README.md", "| Local CLI | 0.1.2 |", "| Local CLI | 0.1.1 |")
-        self.assert_rejected("version matrix must identify local CLI 0.1.2")
+        self.replace_once("README.md", "| Local CLI | 0.3.0 |", "| Local CLI | 0.1.1 |")
+        self.assert_rejected("version matrix must identify local CLI 0.3.0")
 
     def test_rejects_wrong_version_matrix_header(self) -> None:
         self.replace_once(
@@ -640,8 +640,8 @@ class PublicDocsValidatorTests(unittest.TestCase):
 
 | Surface | Released version | Embedded Python artifact |
 | --- | --- | --- |
-| Local CLI | 0.1.2 | flowharness 0.1.2 |
-| Scan Action | v1.0.1 | flowharness 0.1.2 |
+| Local CLI | 0.3.0 | flowharness 0.3.0 |
+| Scan Action | v1.1.0 | flowharness 0.3.0 |
 | Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |
 """
         self.append("README.md", f"\n{matrix}")
@@ -659,23 +659,23 @@ class PublicDocsValidatorTests(unittest.TestCase):
     def test_rejects_incomplete_version_matrix_cell(self) -> None:
         self.replace_once(
             "README.md",
-            "| Scan Action | v1.0.1 | flowharness 0.1.2 |",
-            "| Scan Action | v1.0.1 | |",
+            "| Scan Action | v1.1.0 | flowharness 0.3.0 |",
+            "| Scan Action | v1.1.0 | |",
         )
         self.assert_rejected("version matrix rows must be exactly")
 
     def test_rejects_missing_version_matrix_row(self) -> None:
         self.replace_once(
-            "README.md", "| Local CLI | 0.1.2 | flowharness 0.1.2 |\n", ""
+            "README.md", "| Local CLI | 0.3.0 | flowharness 0.3.0 |\n", ""
         )
         self.assert_rejected("version matrix rows must be exactly")
 
     def test_rejects_wrong_scan_action_matrix_entry(self) -> None:
         self.replace_once(
-            "README.md", "| Scan Action | v1.0.1 |", "| Scan Action | v1.0.0 |"
+            "README.md", "| Scan Action | v1.1.0 |", "| Scan Action | v1.0.1 |"
         )
         self.assert_rejected(
-            "version matrix must identify Scan Action v1.0.1 with embedded 0.1.2"
+            "version matrix must identify Scan Action v1.1.0 with embedded 0.3.0"
         )
 
     def test_rejects_wrong_vibe_action_matrix_entry(self) -> None:

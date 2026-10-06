@@ -9,7 +9,7 @@ repository migration.
 Run the pinned scanner locally and share the report with the people who own agent behavior:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . --format json \
+uvx --from flowharness==0.3.0 flowharness scan . --format json \
   --output flowharness-report.json
 ```
 
@@ -25,7 +25,7 @@ A baseline accepts the identity of current findings without declaring them harml
 from a trusted, reviewed commit:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . --set-baseline \
+uvx --from flowharness==0.3.0 flowharness scan . --set-baseline \
   > .flowharness-baseline.json
 git add .flowharness-baseline.json
 git commit -m "chore: record FlowHarness baseline"
@@ -40,7 +40,7 @@ debt is accepted.
 Use the committed record to reject findings not present in the baseline:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . \
+uvx --from flowharness==0.3.0 flowharness scan . \
   --baseline .flowharness-baseline.json --fail-on baseline
 ```
 
@@ -80,9 +80,9 @@ Once static inspection is stable, add FlowHarness Vibe Check for behavior that n
 examples. Initialize configuration, seed the replay suite, and review every generated artifact:
 
 ```console
-uvx --no-config --no-sources --from flowharness==0.1.2 \
+uvx --no-config --no-sources --from flowharness==0.3.0 \
   flowharness init --dir . --hook none --workflow none
-uvx --no-config --no-sources --from flowharness-ci-runner==0.1.2 \
+uvx --no-config --no-sources --from flowharness-ci-runner==0.3.0 \
   flowharness-ci seed
 ```
 

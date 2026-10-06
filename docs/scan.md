@@ -1,13 +1,13 @@
 # FlowHarness Scan
 
-FlowHarness Scan 0.1.2 deterministically inspects a repository's agent-context surfaces. The
+FlowHarness Scan 0.3.0 deterministically inspects a repository's agent-context surfaces. The
 scanner is read-only, uses no model, makes no network calls, and requires no account. `uvx` may
 still connect to PyPI before the scan to obtain the released package.
 
-Use the pinned form below when you need to reproduce 0.1.2 behavior:
+Use the pinned form below when you need to reproduce 0.3.0 behavior:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan .
+uvx --from flowharness==0.3.0 flowharness scan .
 ```
 
 ## Choose Scan for static repository hygiene
@@ -36,7 +36,7 @@ not put them in an agent instruction file used by people or automation:
 Run the pinned scanner against that disposable directory:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan .flowharness-demo \
+uvx --from flowharness==0.3.0 flowharness scan .flowharness-demo \
   --format json --fail-on risk
 ```
 
@@ -71,8 +71,8 @@ approve the least-privilege workflow outcome with the corrected instruction and 
 the selected bytes atomically to a file instead of stdout.
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . --format json --output flowharness-report.json
-uvx --from flowharness==0.1.2 flowharness scan . --format badge --output flowharness-badge.svg
+uvx --from flowharness==0.3.0 flowharness scan . --format json --output flowharness-report.json
+uvx --from flowharness==0.3.0 flowharness scan . --format badge --output flowharness-badge.svg
 ```
 
 The selected format does not change the exit gate.
@@ -94,9 +94,9 @@ as a verdict.
 Choose a gate with `--fail-on`:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . --fail-on risk
-uvx --from flowharness==0.1.2 flowharness scan . --fail-on "index>40"
-uvx --from flowharness==0.1.2 flowharness scan . \
+uvx --from flowharness==0.3.0 flowharness scan . --fail-on risk
+uvx --from flowharness==0.3.0 flowharness scan . --fail-on "index>40"
+uvx --from flowharness==0.3.0 flowharness scan . \
   --baseline .flowharness-baseline.json --fail-on baseline
 ```
 
@@ -111,7 +111,7 @@ uvx --from flowharness==0.1.2 flowharness scan . \
 Create a baseline from a reviewed repository state, inspect the generated JSON, and commit it:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . --set-baseline > .flowharness-baseline.json
+uvx --from flowharness==0.3.0 flowharness scan . --set-baseline > .flowharness-baseline.json
 git add .flowharness-baseline.json
 git commit -m "chore: record FlowHarness baseline"
 ```
@@ -119,7 +119,7 @@ git commit -m "chore: record FlowHarness baseline"
 Then gate only newly introduced findings:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . \
+uvx --from flowharness==0.3.0 flowharness scan . \
   --baseline .flowharness-baseline.json --fail-on baseline
 ```
 
@@ -131,7 +131,7 @@ Regenerate and review the baseline deliberately when accepted debt changes.
 The [copy-paste workflow](../examples/scan.yml) uses
 [`flowharness-ai/scan-action@v1`](https://github.com/flowharness-ai/scan-action) with only
 `contents: read`. Its supported inputs are `directory` and `fail-on`. The current `v1` release is
-Scan Action 1.0.1 and embeds `flowharness` 0.1.2.
+Scan Action 1.1.0 and embeds `flowharness` 0.3.0.
 
 The Action emits GitHub annotations, appends a verdict to the step summary, and propagates the
 captured exit code. The same scanner-error and usage-error caveats apply to codes `1` and `2`.
@@ -141,7 +141,7 @@ captured exit code. The same scanner-error and usage-error caveats apply to code
 Create a SARIF artifact without changing the gate:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . \
+uvx --from flowharness==0.3.0 flowharness scan . \
   --format sarif --output flowharness.sarif --fail-on risk
 ```
 
