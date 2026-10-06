@@ -32,7 +32,7 @@ zero-model, account-free, and makes no network calls.
 A result such as:
 
 ```text
-flowharness-scan: drift index 30/100 (drifting) - QUARANTINE (policy scoring/1)
+flowharness-scan: drift index 30/100 (drifting) - QUARANTINE (policy scoring/2)
 ```
 
 has two parts: a 0–100 Architectural Drift Index and a risk verdict.
@@ -74,7 +74,7 @@ Action source.
 
 - **FlowHarness Scan** statically inspects agent-context surfaces, emits local, GitHub, JSON,
   badge, or SARIF output, and supports committed baselines. Read the [Scan guide](docs/scan.md) or
-  the [flowharness 0.1.2 PyPI page](https://pypi.org/project/flowharness/0.1.2/).
+  the [flowharness 0.3.0 PyPI page](https://pypi.org/project/flowharness/0.3.0/).
 - **FlowHarness Vibe Check** replays committed evaluation cases for an agent-context change,
   publishes the result to the step summary, and creates or updates one sticky comment on
   same-repository pull requests. Read the [Vibe Check guide](docs/vibe-check.md), browse the
@@ -101,8 +101,8 @@ signals, not interchangeable gates.
 
 | Surface | Released version | Embedded Python artifact |
 | --- | --- | --- |
-| Local CLI | 0.1.2 | flowharness 0.1.2 |
-| Scan Action | v1.0.1 | flowharness 0.1.2 |
+| Local CLI | 0.3.0 | flowharness 0.3.0 |
+| Scan Action | v1.1.0 | flowharness 0.3.0 |
 | Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |
 
 Stable major Action tags are used in copy-paste workflows. Organizations that require immutable
@@ -115,7 +115,7 @@ FlowHarness is open-core. Its local tools and GitHub Actions are free and Apache
 
 This public documentation and examples hub is not a VCS source mirror. It is also not the
 commercial-platform implementation. The two public Action repositories contain browsable Action
-source. The released Python source is Apache-2.0 source contained in the six PyPI 0.1.2 sdists.
+source. The released Python source is Apache-2.0 source contained in the six PyPI 0.3.0 sdists.
 See [Source and provenance](docs/source-and-provenance.md) for direct artifacts and hashes.
 
 ## From one repository to organizational governance
@@ -153,12 +153,12 @@ and annotated tag
 ## Release and project policies
 
 The six released Python distributions are
-[flowharness](https://pypi.org/project/flowharness/0.1.2/),
-[flowharness-ci-runner](https://pypi.org/project/flowharness-ci-runner/0.1.2/),
-[flowharness-core](https://pypi.org/project/flowharness-core/0.1.2/),
-[flowharness-inspection](https://pypi.org/project/flowharness-inspection/0.1.2/),
-[flowharness-evaluation](https://pypi.org/project/flowharness-evaluation/0.1.2/), and
-[flowharness-portability](https://pypi.org/project/flowharness-portability/0.1.2/).
+[flowharness](https://pypi.org/project/flowharness/0.3.0/),
+[flowharness-ci-runner](https://pypi.org/project/flowharness-ci-runner/0.3.0/),
+[flowharness-core](https://pypi.org/project/flowharness-core/0.3.0/),
+[flowharness-inspection](https://pypi.org/project/flowharness-inspection/0.3.0/),
+[flowharness-evaluation](https://pypi.org/project/flowharness-evaluation/0.3.0/), and
+[flowharness-portability](https://pypi.org/project/flowharness-portability/0.3.0/).
 
 This hub's documentation and examples are licensed under [Apache-2.0](LICENSE). Report security
 issues through the private process in [SECURITY.md](SECURITY.md); do not disclose secrets in a

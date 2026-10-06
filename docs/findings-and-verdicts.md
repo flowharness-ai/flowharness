@@ -1,6 +1,6 @@
 # Findings and verdicts
 
-FlowHarness Scan 0.1.2 produces two related answers: an Architectural Drift Index from 0 to 100
+FlowHarness Scan 0.3.0 produces two related answers: an Architectural Drift Index from 0 to 100
 and a gate verdict. A higher index means more architectural drift; it is not a probability of
 failure. The verdict answers whether the selected gate passed. Read both, then inspect the
 findings that produced them.
@@ -8,7 +8,7 @@ findings that produced them.
 For a detailed, machine-readable report, run:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan . --format json
+uvx --from flowharness==0.3.0 flowharness scan . --format json
 ```
 
 Each finding identifies a check, severity, affected subject, evidence, and a suggested action when
@@ -17,7 +17,7 @@ inspect the repository rather than treating the report as a replacement for revi
 
 ## Check families
 
-The default 0.1.2 scan groups checks into two families:
+The default 0.3.0 scan groups checks into two families:
 
 - **Architectural drift** finds duplication, contradiction, divergence between equivalent agent
   surfaces, and orphaned context. These dimensions contribute to the index.

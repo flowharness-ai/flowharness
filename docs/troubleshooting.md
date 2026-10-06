@@ -8,9 +8,9 @@ A process exit alone is not enough to distinguish a verdict from a setup error.
 Use the distribution name after `--from` and the console-script name after it:
 
 ```console
-uvx --no-config --no-sources --refresh --from flowharness==0.1.2 \
+uvx --no-config --no-sources --refresh --from flowharness==0.3.0 \
   flowharness --help
-uvx --no-config --no-sources --refresh --from flowharness-ci-runner==0.1.2 \
+uvx --no-config --no-sources --refresh --from flowharness-ci-runner==0.3.0 \
   flowharness-ci --help
 ```
 
@@ -19,9 +19,9 @@ forces a fresh resolution, while `--no-config --no-sources` ignores persistent u
 and alternate sources. If acquisition fails, verify network access to PyPI and package hosts,
 then retry the pinned form. Do not diagnose package-install traffic as scanner egress.
 
-Version output can differ between the Action and local commands: Vibe Check Action v1.0.1 embeds
-`flowharness-ci-runner` 0.1.1, while this hub's developer commands exercise the separately released
-0.1.2 runner. The [version matrix](../README.md#version-matrix) records that boundary.
+The Actions and the developer commands in this hub use the same release: Scan Action v1.1.0 embeds
+`flowharness` 0.3.0, and Vibe Check Action v1.1.0 embeds `flowharness-ci-runner` 0.3.0. The
+[version matrix](../README.md#version-matrix) records each surface.
 
 ## Vibe Check cannot find a merge base
 
@@ -46,7 +46,7 @@ suite then fails closed with an `error:` line and exit `2`. Run the developer se
 diff, and commit the real files:
 
 ```console
-uvx --no-config --no-sources --from flowharness-ci-runner==0.1.2 \
+uvx --no-config --no-sources --from flowharness-ci-runner==0.3.0 \
   flowharness-ci seed
 ```
 

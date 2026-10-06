@@ -15,16 +15,16 @@ uvx flowharness scan .
 The first `uvx` invocation may connect to PyPI to obtain the package and its dependencies. Once
 the tool starts, the default scan is deterministic, read-only, zero-model, and zero-network.
 
-For an explicitly reproducible 0.1.2 invocation:
+For an explicitly reproducible 0.3.0 invocation:
 
 ```console
-uvx --from flowharness==0.1.2 flowharness scan .
+uvx --from flowharness==0.3.0 flowharness scan .
 ```
 
 A repository with material risk findings might print:
 
 ```text
-flowharness-scan: drift index 30/100 (drifting) - QUARANTINE (policy scoring/1)
+flowharness-scan: drift index 30/100 (drifting) - QUARANTINE (policy scoring/2)
 ```
 
 The index measures context drift. The word after the dash is the gate:
