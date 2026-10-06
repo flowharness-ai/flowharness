@@ -79,7 +79,10 @@ Action source.
   publishes the result to the step summary, and creates or updates one sticky comment on
   same-repository pull requests. Read the [Vibe Check guide](docs/vibe-check.md), browse the
   [Vibe Check Action source](https://github.com/flowharness-ai/vibe-check-action), or inspect the
-  [flowharness-ci-runner 0.1.2 PyPI page](https://pypi.org/project/flowharness-ci-runner/0.1.2/).
+  [flowharness-ci-runner 0.3.0 PyPI page](https://pypi.org/project/flowharness-ci-runner/0.3.0/).
+  The Action can also run [NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector) on your
+  agent skills and gate its findings in the same comment; see
+  [Gate SkillSpector findings](docs/vibe-check.md#gate-skillspector-findings).
 
 Start with the [Getting started guide](docs/getting-started.md).
 
@@ -100,7 +103,7 @@ signals, not interchangeable gates.
 | --- | --- | --- |
 | Local CLI | 0.1.2 | flowharness 0.1.2 |
 | Scan Action | v1.0.1 | flowharness 0.1.2 |
-| Vibe Check Action | v1.0.1 | flowharness-ci-runner 0.1.1 |
+| Vibe Check Action | v1.1.0 | flowharness-ci-runner 0.3.0 |
 
 Stable major Action tags are used in copy-paste workflows. Organizations that require immutable
 supply-chain inputs can replace the major tag with the release commit SHA shown in the relevant
